@@ -1,21 +1,19 @@
 import 'dart:async';
 import 'dart:io';
-
-import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
 
 class DownloadOptions {
   final ProgressDatabase progressDatabase;
   final File target;
-  final deleteOnCancel;
+  final bool deleteOnCancel;
 
-  http.BaseClient httpClient;
-  void Function() onDone;
-  ProgressCallback progressCallback;
+  http.BaseClient? httpClient;
+  void Function()? onDone;
+  ProgressCallback? progressCallback;
 
   DownloadOptions({
-    @required this.progressDatabase,
-    @required this.target,
+    required this.progressDatabase,
+    required this.target,
     this.deleteOnCancel = false,
     this.httpClient,
     this.onDone,
@@ -123,7 +121,7 @@ Future<StreamSubscription> _download(
     final response = await client.send(request);
     final total = response.contentLength ?? -1;
     final sink = await target.open(mode: FileMode.writeOnlyAppend);
-    StreamSubscription subscription;
+    late StreamSubscription subscription;
     subscription = response.stream.listen(
       (data) async {
         subscription.pause();
