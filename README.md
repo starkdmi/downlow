@@ -14,14 +14,17 @@ import 'dart:io';
 import 'package:downlow/downlow.dart';
 
 Future<void> main() async {
-  final target = File('/tmp/cat.jpg');
+  final file = File('/tmp/cat.jpg');
   final options = DownloadOptions(
+    file: file,
+    deleteOnCancel: true,
     progressCallback: (current, total) {
-      final progress = (current / total) * 100;
+      final progress = (current / total * 100).ceilToDouble();
       print('Downloading: $progress');
     },
-    target: target,
-    progressDatabase: InMemoryProgressDatabase(),
+    onDone: () {
+      print('Downloaded');
+    }
   );
   final controller = await download('https://i.imgur.com/z4d4kWk.jpg', options);
   controller.pause(); // to pause the download.
