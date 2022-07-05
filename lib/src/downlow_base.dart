@@ -135,9 +135,7 @@ Future<StreamSubscription> _download(
       onDone: () async {
         options.onDone?.call();
         await sink.close();
-        if (options.httpClient != null) {
-          client.close();
-        }
+        client.close();
       },
     );
     return subscription;
