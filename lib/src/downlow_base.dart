@@ -91,7 +91,7 @@ Future<StreamSubscription> _download(
     var lastProgress = await options.file.exists() ? await options.file.length() : 0;
     final request = http.Request('GET', Uri.parse(url));
     request.headers['Range'] = 'bytes=$lastProgress-';
-    final target = await options.file.create(recursive: true);
+    final target = await options.file.create(recursive: false);
     final response = await client.send(request);
     final total = response.contentLength == null ? -1 : (lastProgress + response.contentLength!);
     final sink = await target.open(mode: FileMode.writeOnlyAppend);
