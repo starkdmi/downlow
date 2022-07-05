@@ -119,7 +119,7 @@ Future<StreamSubscription> _download(
     request.headers['Range'] = 'bytes=$lastProgress-';
     final target = await options.target.create(recursive: true);
     final response = await client.send(request);
-    final total = response.contentLength ?? -1;
+    final total = response.contentLength == null ? -1 : (lastProgress + response.contentLength!);
     final sink = await target.open(mode: FileMode.writeOnlyAppend);
     late StreamSubscription subscription;
     subscription = response.stream.listen(
