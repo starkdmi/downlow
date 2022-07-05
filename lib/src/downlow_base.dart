@@ -3,8 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class DownloadOptions {
-  final ProgressDatabase progressDatabase;
-  final File target;
+  final File file;
   final bool deleteOnCancel;
 
   http.BaseClient? httpClient;
@@ -12,36 +11,12 @@ class DownloadOptions {
   ProgressCallback? progressCallback;
 
   DownloadOptions({
-    required this.progressDatabase,
-    required this.target,
+    required this.file,
     this.deleteOnCancel = false,
     this.httpClient,
     this.onDone,
     this.progressCallback,
   });
-}
-
-abstract class ProgressDatabase {
-  Future<int> getProgress(String url);
-  Future<void> setProgress(String url, int received);
-
-  Future<void> resetProgress(String url) async {
-    await setProgress(url, 0);
-  }
-}
-
-class InMemoryProgressDatabase extends ProgressDatabase {
-  final Map<String, int> _inner = {};
-
-  @override
-  Future<int> getProgress(String url) async {
-    return _inner[url] ?? 0;
-  }
-
-  @override
-  Future<void> setProgress(String url, int received) async {
-    _inner[url] = received;
-  }
 }
 
 class DownloadController {
@@ -55,7 +30,7 @@ class DownloadController {
     StreamSubscription inner,
     DownloadOptions options,
     String url,
-  )   : _inner = inner,
+  ) : _inner = inner,
         _options = options,
         _url = url;
 
@@ -78,9 +53,8 @@ class DownloadController {
   Future<void> cancel() async {
     _checkIfStillValid();
     await _inner.cancel();
-    await _options.progressDatabase.resetProgress(_url);
     if (_options.deleteOnCancel) {
-      await _options.target.delete();
+      await _options.file.delete();
     }
     isCancelled = true;
   }
@@ -114,10 +88,10 @@ Future<StreamSubscription> _download(
 ) async {
   final client = options.httpClient ?? http.Client();
   try {
-    var lastProgress = await options.progressDatabase.getProgress(url);
+    var lastProgress = await options.file.exists() ? await options.file.length() : 0;
     final request = http.Request('GET', Uri.parse(url));
     request.headers['Range'] = 'bytes=$lastProgress-';
-    final target = await options.target.create(recursive: true);
+    final target = await options.file.create(recursive: true);
     final response = await client.send(request);
     final total = response.contentLength == null ? -1 : (lastProgress + response.contentLength!);
     final sink = await target.open(mode: FileMode.writeOnlyAppend);
@@ -127,7 +101,6 @@ Future<StreamSubscription> _download(
         subscription.pause();
         await sink.writeFrom(data);
         final currentProgress = lastProgress + data.length;
-        await options.progressDatabase.setProgress(url, currentProgress);
         lastProgress = currentProgress;
         options.progressCallback?.call(currentProgress, total);
         subscription.resume();
