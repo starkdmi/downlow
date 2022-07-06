@@ -19,7 +19,7 @@ Future<void> main() async {
     file: file,
     deleteOnCancel: true,
     progressCallback: (current, total) {
-      final progress = (current / total * 100).ceilToDouble();
+      final progress = (current / total * 100).floorToDouble();
       print('Downloading: $progress');
     },
     onDone: () {
