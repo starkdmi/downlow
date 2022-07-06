@@ -48,6 +48,7 @@ class DownloadController {
       return;
     }
     _inner = await _download(_url, _options);
+    isDownloading = true;
   }
 
   Future<void> cancel() async {
