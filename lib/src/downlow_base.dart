@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 class DownloadOptions {
   final File file;
   final bool deleteOnCancel;
+  final bool deleteOnError;
 
   http.BaseClient? httpClient;
   void Function()? onDone;
@@ -13,6 +14,7 @@ class DownloadOptions {
   DownloadOptions({
     required this.file,
     this.deleteOnCancel = false,
+    this.deleteOnError = true,
     this.httpClient,
     this.onDone,
     this.progressCallback,
@@ -114,6 +116,9 @@ Future<StreamSubscription> _download(
     );
     return subscription;
   } catch (e) {
+    if (options.deleteOnError) {
+      await options.file.delete();
+    }
     rethrow;
   }
 }
